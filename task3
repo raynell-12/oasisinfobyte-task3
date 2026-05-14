@@ -1,0 +1,181 @@
+# RANDOM PASSWORD GENERATOR PROJECT
+# Features:
+# 1. Generate Secure Random Passwords
+# 2. User Choice for Length
+# 3. Include Letters, Numbers, Symbols
+# 4. Password Strength Checker
+# 5. Save Password History
+
+import random
+import string
+import json
+import os
+
+DATA_FILE = "password_history.json"
+
+
+# -----------------------------
+# Load Saved Passwords
+# -----------------------------
+def load_history():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as file:
+            return json.load(file)
+    return []
+
+
+# -----------------------------
+# Save Password History
+# -----------------------------
+def save_history(history):
+    with open(DATA_FILE, "w") as file:
+        json.dump(history, file, indent=4)
+
+
+# -----------------------------
+# Generate Password
+# -----------------------------
+def generate_password(length, use_letters, use_numbers, use_symbols):
+
+    characters = ""
+
+    if use_letters:
+        characters += string.ascii_letters
+
+    if use_numbers:
+        characters += string.digits
+
+    if use_symbols:
+        characters += string.punctuation
+
+    if not characters:
+        return None
+
+    password = ''.join(random.choice(characters) for _ in range(length))
+
+    return password
+
+
+# -----------------------------
+# Password Strength Checker
+# -----------------------------
+def check_strength(password):
+
+    strength = 0
+
+    if any(char.islower() for char in password):
+        strength += 1
+
+    if any(char.isupper() for char in password):
+        strength += 1
+
+    if any(char.isdigit() for char in password):
+        strength += 1
+
+    if any(char in string.punctuation for char in password):
+        strength += 1
+
+    if len(password) >= 12:
+        strength += 1
+
+    # Strength Levels
+    if strength <= 2:
+        return "Weak"
+
+    elif strength == 3 or strength == 4:
+        return "Medium"
+
+    else:
+        return "Strong"
+
+
+# -----------------------------
+# View Password History
+# -----------------------------
+def view_history():
+
+    history = load_history()
+
+    if not history:
+        print("\nNo password history found.")
+        return
+
+    print("\n===== PASSWORD HISTORY =====")
+
+    for i, item in enumerate(history, start=1):
+        print(f"{i}. Password: {item['password']}")
+        print(f"   Strength: {item['strength']}")
+        print()
+
+
+# -----------------------------
+# Main Program
+# -----------------------------
+def main():
+
+    while True:
+
+        print("\n===== RANDOM PASSWORD GENERATOR =====")
+        print("1. Generate Password")
+        print("2. View Password History")
+        print("3. Exit")
+
+        choice = input("Enter your choice: ")
+
+        # Generate Password
+        if choice == "1":
+
+            try:
+                length = int(input("Enter password length: "))
+
+                if length <= 0:
+                    print("Password length must be greater than 0.")
+                    continue
+
+                print("\nInclude in password?")
+                letters = input("Letters? (y/n): ").lower() == 'y'
+                numbers = input("Numbers? (y/n): ").lower() == 'y'
+                symbols = input("Symbols? (y/n): ").lower() == 'y'
+
+                password = generate_password(length, letters, numbers, symbols)
+
+                if password is None:
+                    print("Select at least one character type.")
+                    continue
+
+                strength = check_strength(password)
+
+                print("\n===== GENERATED PASSWORD =====")
+                print("Password:", password)
+                print("Strength:", strength)
+
+                # Save Password
+                history = load_history()
+
+                history.append({
+                    "password": password,
+                    "strength": strength
+                })
+
+                save_history(history)
+
+                print("Password saved successfully!")
+
+            except ValueError:
+                print("Invalid input! Please enter numbers only.")
+
+        # View History
+        elif choice == "2":
+            view_history()
+
+        # Exit
+        elif choice == "3":
+            print("Exiting program...")
+            break
+
+        else:
+            print("Invalid choice! Try again.")
+
+
+# Run Program
+main()
